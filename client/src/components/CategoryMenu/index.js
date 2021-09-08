@@ -3,24 +3,40 @@ import { useQuery } from '@apollo/client';
 import { QUERY_CATEGORIES } from '../../utils/queries';
 import { useStoreContext } from "../../utils/GlobalState";
 import { UPDATE_CATEGORIES, UPDATE_CURRENT_CATEGORY } from '../../utils/actions';
+import { idbPromise } from '../../utils/helpers';
 
 function CategoryMenu() {
   const [state, dispatch] = useStoreContext();
 
   const { categories } = state;
   
-  const { data: categoryData } = useQuery(QUERY_CATEGORIES);
+  const { loading, data: categoryData } = useQuery(QUERY_CATEGORIES);
 
   useEffect(() => {
     // if categoryData exists or has changed from the response of useQuery, then run dispatch()
-    if (categoryData) {
+    if(categoryData) {
       // execute our dispatch function with our action object indicating the type of action and the data to set our state for categories to
       dispatch({
-        type: UPDATE_CATEGORIES,
-        categories: categoryData.categories
+          type: UPDATE_CATEGORIES,
+          categories: categoryData.categories
+        });
+
+        // but let's also take each product and save it to IndexedDB using the helper function
+        categoryData.categories.forEach((category) => {
+          idbPromise('categories', 'put', category);
+        });
+        // add else if to check if `loading` is undefined in `useQuery()` hook
+      } else if (!loading) {
+        // since we're offline, get all of the data from the `categories` store
+        idbPromise('categories', 'get').then((categories) => {
+          // use retrieved data to set global state for offline browsing
+          dispatch({
+            type: UPDATE_CATEGORIES,
+            categories: categories
+          });
       });
     }
-  }, [categoryData, dispatch]);
+  }, [categoryData, loading, dispatch]);
 
   const handleClick = id => {
     dispatch({
