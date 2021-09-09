@@ -5,7 +5,7 @@
 
 ## Description
 
-Deployed application on heroku: https://dashboard.heroku.com/apps/shop-shop03718349
+Deployed application on heroku: https://shop-shop03718349.herokuapp.com/
 
 ### Screenshots
 ![Shop Shop Home]()
